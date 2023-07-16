@@ -1,8 +1,10 @@
 
 import os
 import sys
+import platform
 
-if os.geteuid() != 0:
+
+if os.geteuid() != 0 and platform.system() == 'Linux':
     os.execvp('sudo', ['sudo', 'python3'] + sys.argv)
 
 from functools import cmp_to_key
@@ -10,7 +12,10 @@ import pygame
 import pygame.midi
 import keyboard
 
-os.system('clear')
+if platform.system() == 'Linux':
+    os.system('clear')
+else:
+    os.system('cls')
 
 def main():
     global Device
@@ -50,14 +55,14 @@ Import:  import keyBinds from a file''')
             n = k.split(",")[0].strip()
             b = k.split(",")[1].strip() 
 
-            print(f"{n}, {b}")
+            print(f"[\"{n}\", \"{b}\"]")
             
             if int(n) < 0 and int(n) > 127:
                 k = input("Note out of range (0 - 127)\n>")
-            elif (not keyboard.is_modifier(b)) or (type(b) != type('u') and b[0] != b):
+            elif isValidKey(k):
                 k = input("Invalid key. Valid key ex: ctrl+s\n>")
             else:
-                keybinds.append(keyBind(b, k))
+                keybinds.append(keyBind(b, int(k)))
                 updateKeyList()
 
 
@@ -112,6 +117,19 @@ def printMidiDevices():
             print(De)
 
         i += 1 
+
+def isValidKey(key: str):
+    if keyboard.is_modifier(key): return True
+    if key.__len__() == 1: return True
+    if key.__contains__('+'):
+        s = key.split('+')
+        isValid = True
+        for k in s:
+            isValid = keyboard.is_modifier(k) or k.__len__() == 1
+            if not isValid: return False
+        return True
+    return False
+            
 
 print("Welcome to Midi2Key for linux/mac! press ESC to enter text input mode.\n")
 
