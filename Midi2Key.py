@@ -20,7 +20,8 @@ else:
 def main():
     global Device
     global DeviceID
-    
+    global InputMode
+
     inp = input(">")
     inp = inp.__str__().lower()
     if inp == 'help':
@@ -29,7 +30,9 @@ def main():
 Input:   change the midi input
 KeyBind: add or remove keyBinds
 Export:  export the current keyBinds
-Import:  import keyBinds from a file''')
+Import:  import keyBinds from a file
+List -[arg]: [devices]: lists the midi devices
+             [keybinds]: lists the keybinds''')
     elif inp == 'input': #TODO fix error input
         DeviceID = -1
         printMidiDevices()
@@ -45,25 +48,31 @@ Import:  import keyBinds from a file''')
 
         print("Success!\n")
     elif inp == 'keybind':
-        k = input("Add keybinds by typing a tuple in the form: Note, key\n>").strip().lower()
+        k = input("Add keybinds by typing a tuple in the form: Note, key.\nLeaving a key blank removes the keybind\n>").strip().lower()
         while True:
-            if k == -1:
+            if k == "-1":
                 InputMode = True
                 print("Quitting text input mode...")
                 break
+            
+            if not k.__contains__(","):
+                k = "-1,-1"
 
             n = k.split(",")[0].strip()
             b = k.split(",")[1].strip() 
 
-            print(f"[\"{n}\", \"{b}\"]")
+            #print(f"[\"{n}\", \"{b}\"]")
             
-            if int(n) < 0 and int(n) > 127:
+            if n == "-1" and b == "-1" or n == "":
+                k = input("Invalid input. Try again!\n>")
+            elif int(n) < 0 and int(n) > 127:
                 k = input("Note out of range (0 - 127)\n>")
             elif isValidKey(k):
                 k = input("Invalid key. Valid key ex: ctrl+s\n>")
             else:
-                keybinds.append(keyBind(b, int(k)))
+                keybinds.append(keyBind(b, int(n)))
                 updateKeyList()
+                k = input("Success!\n>")
 
 
 class keyBind:
