@@ -113,7 +113,7 @@ def printMidiDevices():
 
         i += 1 
 
-print("Welcom to Midi2Key for linux/mac! press ESC to enter text input mode.\n")
+print("Welcome to Midi2Key for linux/mac! press ESC to enter text input mode.\n")
 
 InputMode = True
 
