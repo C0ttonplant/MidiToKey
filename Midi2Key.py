@@ -3,7 +3,6 @@ import os
 import sys
 import platform
 
-
 if os.geteuid() != 0 and platform.system() == 'Linux':
     os.execvp('sudo', ['sudo', 'python3'] + sys.argv)
 
@@ -11,16 +10,13 @@ from functools import cmp_to_key
 import pygame
 import pygame.midi
 import keyboard
-
-if platform.system() == 'Linux':
-    os.system('clear')
-else:
-    os.system('cls')
+import json
 
 def main():
     global Device
     global DeviceID
     global InputMode
+    global MidiObj
 
     inp = input(">")
     inp = inp.__str__().lower()
@@ -74,7 +70,6 @@ List -[arg]: [devices]: lists the midi devices
                 updateKeyList()
                 k = input("Success!\n>")
 
-
 class keyBind:
     def __init__(self, keys: str, note: int):
         self.keys = keys
@@ -91,7 +86,7 @@ class keyBind:
         if a.keys < b.keys: return -1
         return 0
 
-def getDeviceIdByName(name: bytes, IO: int):
+def getDeviceIdByName(name: bytes, IO: int) -> int:
     """name: the name of the device. IO: search for the input(1) / output(0) device.
        returns -1 if there is no match"""
 
@@ -104,7 +99,7 @@ def getDeviceIdByName(name: bytes, IO: int):
         i += 1 
     return -1
 
-def updateKeyList():
+def updateKeyList() -> None:
     global keybinds
     global keyList
     keybinds = sorted(keybinds, key=cmp_to_key(keyBind.comparator))
@@ -117,7 +112,7 @@ def updateKeyList():
                 i += 1
         n += 1
 
-def printMidiDevices():
+def printMidiDevices() -> None:
     i = 0
     print('These are the Midi devices avalable:\n')
     while i < pygame.midi.get_count():
@@ -127,7 +122,7 @@ def printMidiDevices():
 
         i += 1 
 
-def isValidKey(key: str):
+def isValidKey(key: str) -> bool:
     if keyboard.is_modifier(key): return True
     if key.__len__() == 1: return True
     if key.__contains__('+'):
@@ -139,21 +134,28 @@ def isValidKey(key: str):
         return True
     return False
             
+def clearConsole() -> None:
+    if platform.system() == 'Linux':
+        os.system('clear')
+    else:
+        os.system('cls')
 
+
+InputMode: bool = True
+keybinds: list[keyBind] = [keyBind('enter', 67),keyBind('f', 57), keyBind('g', 59), keyBind('h', 60), keyBind('j', 62), keyBind('left_arrow', 69), keyBind('up_arrow', 70), keyBind('down_arrow', 71), keyBind('right_arrow', 72)]
+keyList: list[str] = [''] * 127
+DeviceID: int = -1
+Device: pygame.midi.Input = pygame.midi.Input(pygame.midi.get_default_input_id())
+MidiObj: pygame.midi
+
+clearConsole()
 print("Welcome to Midi2Key for linux/mac! press ESC to enter text input mode.\n")
 
-InputMode = True
-
-keybinds = [keyBind('enter', 67),keyBind('f', 57), keyBind('g', 59), keyBind('h', 60), keyBind('j', 62), keyBind('left_arrow', 69), keyBind('up_arrow', 70), keyBind('down_arrow', 71), keyBind('right_arrow', 72)]
-
-keyList = [''] * 127
 updateKeyList()
 
 #display = pygame.display.set_mode((300, 300))
 
-
-pygame.midi.init()
-
+MidiObj = pygame.midi.init()
 
 if(pygame.midi.get_count() == 0):
     print("No midi devices! Quitting...")
@@ -162,9 +164,6 @@ if(pygame.midi.get_count() == 0):
     sys.exit()
 
 printMidiDevices()
-
-DeviceID = -1
-Device = pygame.midi.Input(pygame.midi.get_default_input_id())
 
 while DeviceID == -1:
     inp = input("\nType the device you want to use(case sensitive): ")
