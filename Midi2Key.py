@@ -165,7 +165,7 @@ def printMidiDevices() -> None:
     while i < pygame.midi.get_count():
         De = pygame.midi.get_device_info(i)
         if De[2] == 1:
-            print(De)
+            print(f"{i}: {De}")
 
         i += 1 
 
@@ -199,7 +199,6 @@ def checkForInterupt(inp) -> bool:
         return True
     return False
     
-
 def loadKeyBinds(fileDirectory: str = "./KeyBinds.json") -> bool:
     global keybinds
 
@@ -251,12 +250,12 @@ if(pygame.midi.get_count() == 0):
 printMidiDevices()
 
 while DeviceID == -1:
-    inp = input("\nType the device you want to use(case sensitive): ")
-
-    DeviceID = getDeviceIdByName(bytes(inp, "UTF-8", ""), 1)
-    if DeviceID == -1:
+    inp = input("\nType the device number you want to use: ")
+    inp = int(inp)
+    if not (inp < pygame.midi.get_count() and inp >= 0 and inp % 2 == 0):
         print("Invalid name.")
     else:
+        DeviceID = inp
         Device = pygame.midi.Input(DeviceID)
 
 print("Sucsess!\n")
