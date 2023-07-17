@@ -26,11 +26,12 @@ def main():
     if inp == 'help':
         print('''Here is a list of commands:
 
-Exit:    go back to midi input
-Input:   change the midi input
-KeyBinds: add or remove keyBinds
-Export:  export the current keyBinds
-Import:  import keyBinds from a file
+Exit:        go back to midi input
+Clear:       clear the console
+Input:       change the midi input
+KeyBinds:    add or remove keyBinds
+Export:      export the current keyBinds
+Import:      import keyBinds from a file
 List -[arg]: [devices]: lists the midi devices
              [keybinds]: lists the keybinds''') 
     elif inp == 'input': #TODO fix error input
@@ -39,7 +40,7 @@ List -[arg]: [devices]: lists the midi devices
 
         selectMidiDevice(True)
     elif inp == 'keybinds':
-        k = input("Add keybinds by typing a tuple in the form: Note, key.\nLeaving the key blank removes the keybind\n>").strip().lower()
+        k = input("Add keybinds by typing a tuple in the form: Note, key.\nLeaving the key blank removes the keybind\n>>").strip().lower()
         while True:
             if checkForInterupt(k): break
 
@@ -53,24 +54,35 @@ List -[arg]: [devices]: lists the midi devices
             #print(f"[\"{n}\", \"{b}\"]")
             
             if n == "-1" and b == "-1" or n == "":
-                k = input("Invalid input. Try again!\n>")
+                k = input("Invalid input. Try again!\n>>")
             elif int(n) < 0 and int(n) > 127:
-                k = input("Note out of range (0 - 127)\n>")
+                k = input("Note out of range (0 - 127)\n>>")
             elif isValidKey(k):
-                k = input("Invalid key. Valid key ex: ctrl+s\n>")
+                k = input("Invalid key. Valid key ex: ctrl+s\n>>")
             else:
-                keybinds.append(keyBind(b, int(n)))
+                if keyList[tryParseInt(n)] != '':
+                    i = 0
+                    for bind in keybinds:
+                        if bind.note == tryParseInt(n):
+                            keybinds.pop(i)
+                            break
+                        i += 1
+                if b != '':
+                    keybinds.append(keyBind(b, int(n)))
+                
                 updateKeyList()
-                k = input("Success!\n>")
+                k = input("Success!\n>>")
+    elif inp == 'clear':
+        clearConsole()
     elif inp == 'export':
-        k = input("Type the desired directory for the file. press enter for the default\n>")
+        k = input("Type the desired directory for the file. press enter for the default\n>>")
         
         if k == "": saveKeyBinds()
         else: saveKeyBinds(k)        
         print("Keybinds successfully saved!")
     elif inp == 'import':
         while True:
-            dir = input("Type the directory of the file. press enter for the default\n>")
+            dir = input("Type the directory of the file. press enter for the default\n>>")
 
             if checkForInterupt(dir): break
 
@@ -247,7 +259,7 @@ Device: pygame.midi.Input = pygame.midi.Input(pygame.midi.get_default_input_id()
 loadKeyBinds()
 
 clearConsole()
-print("Welcome to Midi2Key for linux/mac! press ESC to enter text input mode.\n")
+print("Welcome to Midi2Key for linux/mac! press ESC to enter/exit text input mode.\n")
 
 updateKeyList()
 
@@ -270,7 +282,7 @@ while True:
     #handle midi input
     output = pygame.midi.Input.read(Device, 1)
     if keyboard.is_pressed('esc'):
-        print("Type help for a list of commands! type -1 to quit.\n")
+        print("Type help for a list of commands! type -1 to go back.\n")
         InputMode = False
 
     if output != [] and InputMode:
