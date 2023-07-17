@@ -188,17 +188,15 @@ def clearConsole() -> None:
         os.system('cls')
 
 def checkForInterupt(inp) -> bool:
-    
+    global InputMode
+
     if inp == "-1": return True
     if keyboard.is_pressed('esc'):
         InputMode = True
-        print("true")
         return True
     if inp == "exit":
         InputMode = True
-        print(InputMode)
         return True
-    print("false")
     return False
     
 
