@@ -38,16 +38,13 @@ List -[arg]: [devices]: lists the midi devices
         printMidiDevices()
 
         while DeviceID == -1:
-            inp = input("\nType the device you want to use(case sensitive): ")
-            DeviceID = getDeviceIdByName(bytes(inp, "UTF-8", ""), 1)
-
-            if DeviceID == -1:
+            inp = input("\nType the device number you want to use: ")
+            inp = int(inp)
+            if not (inp < pygame.midi.get_count() and inp >= 0 and inp % 2 == 0):
                 print("Invalid name.")
             else:
+                DeviceID = inp
                 Device = pygame.midi.Input(DeviceID)
-                print("Success!\n")
-
-            if checkForInterupt(inp): break
     elif inp == 'keybind':
         k = input("Add keybinds by typing a tuple in the form: Note, key.\nLeaving the key blank removes the keybind\n>").strip().lower()
         while True:
