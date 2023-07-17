@@ -37,14 +37,7 @@ List -[arg]: [devices]: lists the midi devices
         DeviceID = -1
         printMidiDevices()
 
-        while DeviceID == -1:
-            inp = input("\nType the device number you want to use: ")
-            inp = int(inp)
-            if not (inp < pygame.midi.get_count() and inp >= 0 and inp % 2 == 0):
-                print("Invalid name.")
-            else:
-                DeviceID = inp
-                Device = pygame.midi.Input(DeviceID)
+        selectMidiDevice(True)
     elif inp == 'keybind':
         k = input("Add keybinds by typing a tuple in the form: Note, key.\nLeaving the key blank removes the keybind\n>").strip().lower()
         while True:
@@ -221,6 +214,29 @@ def saveKeyBinds(fileDirectory: str = "./KeyBinds.json") -> bool:
     file.close()
     return True
 
+def tryParseInt(s, base=10, val=None):
+  try:
+    return int(s, base)
+  except ValueError:
+    return -1
+
+def selectMidiDevice(checkInterupt: bool = False):
+    global DeviceID
+    global Device
+
+    end = False
+    while not end:
+        inp = input("\nType the device number you want to use: ")
+        if checkInterupt:
+            if checkForInterupt(inp + (not checkInterupt)): break
+        
+        inp = tryParseInt(inp)
+        if not (inp < pygame.midi.get_count() and inp >= 0 and inp % 2 == 1):
+            print("Invalid number.")
+        else:
+            end = True
+            DeviceID = inp
+            Device = pygame.midi.Input(DeviceID)
 
 MidiObj: pygame.midi = pygame.midi.init()
 InputMode: bool = True
@@ -246,14 +262,7 @@ if(pygame.midi.get_count() == 0):
 
 printMidiDevices()
 
-while DeviceID == -1:
-    inp = input("\nType the device number you want to use: ")
-    inp = int(inp)
-    if not (inp < pygame.midi.get_count() and inp >= 0 and inp % 2 == 0):
-        print("Invalid name.")
-    else:
-        DeviceID = inp
-        Device = pygame.midi.Input(DeviceID)
+selectMidiDevice()
 
 print("Sucsess!\n")
 
