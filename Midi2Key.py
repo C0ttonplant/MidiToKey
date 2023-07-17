@@ -28,7 +28,7 @@ def main():
 
 Exit:    go back to midi input
 Input:   change the midi input
-KeyBind: add or remove keyBinds
+KeyBinds: add or remove keyBinds
 Export:  export the current keyBinds
 Import:  import keyBinds from a file
 List -[arg]: [devices]: lists the midi devices
@@ -38,7 +38,7 @@ List -[arg]: [devices]: lists the midi devices
         printMidiDevices()
 
         selectMidiDevice(True)
-    elif inp == 'keybind':
+    elif inp == 'keybinds':
         k = input("Add keybinds by typing a tuple in the form: Note, key.\nLeaving the key blank removes the keybind\n>").strip().lower()
         while True:
             if checkForInterupt(k): break
@@ -94,7 +94,6 @@ List -[arg]: [devices]: lists the midi devices
 
 class KeyBindEncoder(json.encoder.JSONEncoder):
     def default(self, o):
-            print(o)
             return o.__dict__
 
 class keyBind:
@@ -119,7 +118,7 @@ class keyBind:
             'note' : self.note
         }
 
-def JSONEncoder(json: str):
+def JSONEncoder(json: str) -> keyBind:
     print(json)
     return keyBind(json.get('keys'), json.get('note'))
 
@@ -214,7 +213,7 @@ def saveKeyBinds(fileDirectory: str = "./KeyBinds.json") -> bool:
     file.close()
     return True
 
-def tryParseInt(s, base=10, val=None):
+def tryParseInt(s, base=10, val=None) -> int:
   try:
     return int(s, base)
   except ValueError:
@@ -245,10 +244,10 @@ keyList: list[str] = [''] * 128
 DeviceID: int = -1
 Device: pygame.midi.Input = pygame.midi.Input(pygame.midi.get_default_input_id())
 
+loadKeyBinds()
+
 clearConsole()
 print("Welcome to Midi2Key for linux/mac! press ESC to enter text input mode.\n")
-
-print({'keys' : 51,'note' : 'k'}.get('keys'))
 
 updateKeyList()
 
