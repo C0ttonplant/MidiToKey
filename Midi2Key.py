@@ -28,7 +28,7 @@ def main():
 
 Exit:    go back to midi input
 Input:   change the midi input
-KeyBind: add or remove keyBinds
+KeyBinds: add or remove keyBinds
 Export:  export the current keyBinds
 Import:  import keyBinds from a file
 List -[arg]: [devices]: lists the midi devices
@@ -37,18 +37,8 @@ List -[arg]: [devices]: lists the midi devices
         DeviceID = -1
         printMidiDevices()
 
-        while DeviceID == -1:
-            inp = input("\nType the device you want to use(case sensitive): ")
-            DeviceID = getDeviceIdByName(bytes(inp, "UTF-8", ""), 1)
-
-            if DeviceID == -1:
-                print("Invalid name.")
-            else:
-                Device = pygame.midi.Input(DeviceID)
-                print("Success!\n")
-
-            if checkForInterupt(inp): break
-    elif inp == 'keybind':
+        selectMidiDevice(True)
+    elif inp == 'keybinds':
         k = input("Add keybinds by typing a tuple in the form: Note, key.\nLeaving the key blank removes the keybind\n>").strip().lower()
         while True:
             if checkForInterupt(k): break
@@ -104,7 +94,6 @@ List -[arg]: [devices]: lists the midi devices
 
 class KeyBindEncoder(json.encoder.JSONEncoder):
     def default(self, o):
-            print(o)
             return o.__dict__
 
 class keyBind:
@@ -129,7 +118,7 @@ class keyBind:
             'note' : self.note
         }
 
-def JSONEncoder(json: str):
+def JSONEncoder(json: str) -> keyBind:
     print(json)
     return keyBind(json.get('keys'), json.get('note'))
 
@@ -165,7 +154,7 @@ def printMidiDevices() -> None:
     while i < pygame.midi.get_count():
         De = pygame.midi.get_device_info(i)
         if De[2] == 1:
-            print(De)
+            print(f"{i}: {De}")
 
         i += 1 
 
@@ -188,20 +177,17 @@ def clearConsole() -> None:
         os.system('cls')
 
 def checkForInterupt(inp) -> bool:
-    
+    global InputMode
+
     if inp == "-1": return True
     if keyboard.is_pressed('esc'):
         InputMode = True
-        print("true")
         return True
     if inp == "exit":
         InputMode = True
-        print(InputMode)
         return True
-    print("false")
     return False
     
-
 def loadKeyBinds(fileDirectory: str = "./KeyBinds.json") -> bool:
     global keybinds
 
@@ -227,6 +213,29 @@ def saveKeyBinds(fileDirectory: str = "./KeyBinds.json") -> bool:
     file.close()
     return True
 
+def tryParseInt(s, base=10, val=None) -> int:
+  try:
+    return int(s, base)
+  except ValueError:
+    return -1
+
+def selectMidiDevice(checkInterupt: bool = False):
+    global DeviceID
+    global Device
+
+    end = False
+    while not end:
+        inp = input("\nType the device number you want to use: ")
+        if checkInterupt:
+            if checkForInterupt(inp + (not checkInterupt)): break
+        
+        inp = tryParseInt(inp)
+        if not (inp < pygame.midi.get_count() and inp >= 0 and inp % 2 == 1):
+            print("Invalid number.")
+        else:
+            end = True
+            DeviceID = inp
+            Device = pygame.midi.Input(DeviceID)
 
 MidiObj: pygame.midi = pygame.midi.init()
 InputMode: bool = True
@@ -235,10 +244,10 @@ keyList: list[str] = [''] * 128
 DeviceID: int = -1
 Device: pygame.midi.Input = pygame.midi.Input(pygame.midi.get_default_input_id())
 
+loadKeyBinds()
+
 clearConsole()
 print("Welcome to Midi2Key for linux/mac! press ESC to enter text input mode.\n")
-
-print({'keys' : 51,'note' : 'k'}.get('keys'))
 
 updateKeyList()
 
@@ -252,14 +261,7 @@ if(pygame.midi.get_count() == 0):
 
 printMidiDevices()
 
-while DeviceID == -1:
-    inp = input("\nType the device you want to use(case sensitive): ")
-
-    DeviceID = getDeviceIdByName(bytes(inp, "UTF-8", ""), 1)
-    if DeviceID == -1:
-        print("Invalid name.")
-    else:
-        Device = pygame.midi.Input(DeviceID)
+selectMidiDevice()
 
 print("Sucsess!\n")
 
