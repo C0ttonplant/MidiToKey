@@ -29,7 +29,7 @@ def main():
 Exit:        go back to midi input
 Clear:       clear the console
 Input:       change the midi input
-KeyBinds -[arg]: [note]add or remove note keyBinds
+KeyBinds -[arg]: [note] add or remove note keyBinds
                  [control] add or remove controller keybinds
 Export:      export the current keyBinds
 Import:      import keyBinds from a file
