@@ -26,11 +26,13 @@ def main():
     if inp == 'help':
         print('''Here is a list of commands:
 
-Exit:    go back to midi input
-Input:   change the midi input
-KeyBinds: add or remove keyBinds
-Export:  export the current keyBinds
-Import:  import keyBinds from a file
+Exit:        go back to midi input
+Clear:       clear the console
+Input:       change the midi input
+KeyBinds -[arg]: [note] add or remove note keyBinds
+                 [control] add or remove controller keybinds
+Export:      export the current keyBinds
+Import:      import keyBinds from a file
 List -[arg]: [devices]: lists the midi devices
              [keybinds]: lists the keybinds''') 
     elif inp == 'input': #TODO fix error input
@@ -38,39 +40,84 @@ List -[arg]: [devices]: lists the midi devices
         printMidiDevices()
 
         selectMidiDevice(True)
-    elif inp == 'keybinds':
-        k = input("Add keybinds by typing a tuple in the form: Note, key.\nLeaving the key blank removes the keybind\n>").strip().lower()
-        while True:
-            if checkForInterupt(k): break
+    elif inp.split(" ")[0] == 'keybinds':
+        if inp.split(" ")[1] == '-control':
+            k = input("Add controller keybinds by typing a tuple in the form: Note, key.\nLeaving the key blank removes the keybind\n>>").strip().lower()
+            while True:
+                if checkForInterupt(k): break
 
-            
-            if not k.__contains__(","):
-                k = "-1,-1"
 
-            n = k.split(",")[0].strip()
-            b = k.split(",")[1].strip() 
+                if not k.__contains__(","):
+                    k = "-1,-1"
 
-            #print(f"[\"{n}\", \"{b}\"]")
-            
-            if n == "-1" and b == "-1" or n == "":
-                k = input("Invalid input. Try again!\n>")
-            elif int(n) < 0 and int(n) > 127:
-                k = input("Note out of range (0 - 127)\n>")
-            elif isValidKey(k):
-                k = input("Invalid key. Valid key ex: ctrl+s\n>")
-            else:
-                keybinds.append(keyBind(b, int(n)))
-                updateKeyList()
-                k = input("Success!\n>")
+                n = k.split(",")[0].strip()
+                b = k.split(",")[1].strip() 
+
+                #print(f"[\"{n}\", \"{b}\"]")
+
+                if n == "-1" and b == "-1" or n == "":
+                    k = input("Invalid input. Try again!\n>>")
+                elif int(n) < 0 and int(n) > 256:
+                    k = input("Data out of range (0 - 255)\n>>")
+                elif isValidKey(k):
+                    k = input("Invalid key. Valid key ex: ctrl+s\n>>")
+                else:
+                    if controlList[tryParseInt(n)] != '':
+                        i = 0
+                        for bind in controlbinds:
+                            if bind.note == tryParseInt(n):
+                                controlbinds.pop(i)
+                                break
+                            i += 1
+                    if b != '':
+                        controlbinds.append(keyBind(b, int(n)))
+
+                    updateKeyList()
+                    k = input("Success!\n>>")
+        else:
+            k = input("Add note keybinds by typing a tuple in the form: Note, key.\nLeaving the key blank removes the keybind\n>>").strip().lower()
+            while True:
+                if checkForInterupt(k): break
+
+
+                if not k.__contains__(","):
+                    k = "-1,-1"
+
+                n = k.split(",")[0].strip()
+                b = k.split(",")[1].strip() 
+
+                #print(f"[\"{n}\", \"{b}\"]")
+
+                if n == "-1" and b == "-1" or n == "":
+                    k = input("Invalid input. Try again!\n>>")
+                elif int(n) < 0 and int(n) > 256:
+                    k = input("Note out of range (0 - 255)\n>>")
+                elif isValidKey(k):
+                    k = input("Invalid key. Valid key ex: ctrl+s\n>>")
+                else:
+                    if noteList[tryParseInt(n)] != '':
+                        i = 0
+                        for bind in notebinds:
+                            if bind.note == tryParseInt(n):
+                                notebinds.pop(i)
+                                break
+                            i += 1
+                    if b != '':
+                        notebinds.append(keyBind(b, int(n)))
+
+                    updateKeyList()
+                    k = input("Success!\n>>")
+    elif inp == 'clear':
+        clearConsole()
     elif inp == 'export':
-        k = input("Type the desired directory for the file. press enter for the default\n>")
+        k = input("Type the desired directory for the file. press enter for the default\n>>")
         
         if k == "": saveKeyBinds()
         else: saveKeyBinds(k)        
         print("Keybinds successfully saved!")
     elif inp == 'import':
         while True:
-            dir = input("Type the directory of the file. press enter for the default\n>")
+            dir = input("Type the directory of the file. press enter for the default\n>>")
 
             if checkForInterupt(dir): break
 
@@ -87,7 +134,11 @@ List -[arg]: [devices]: lists the midi devices
         if inp.split(" ")[1] == "-devices":
             printMidiDevices()
         elif inp.split(" ")[1] == "-keybinds":
-            for k in keybinds:
+            print("Note:")
+            for k in notebinds:
+                print(k)
+            print("Controller:")
+            for k in controlbinds:
                 print(k)
         else: print("Invalid operator.")
 
@@ -136,17 +187,18 @@ def getDeviceIdByName(name: bytes, IO: int) -> int:
     return -1
 
 def updateKeyList() -> None:
-    global keybinds
-    global keyList
-    keybinds = sorted(keybinds, key=cmp_to_key(keyBind.comparator))
-    i = 0
-    n = 0
-    for k in keyList:
-        if keybinds[i].note == n:
-            keyList[n] = keybinds[i].keys
-            if(i < keybinds.__len__() - 1):
-                i += 1
-        n += 1
+    global notebinds
+    global noteList
+    global controlbinds
+    global controlList
+
+    notebinds = sorted(notebinds, key=cmp_to_key(keyBind.comparator))
+    controlbinds = sorted(controlbinds, key=cmp_to_key(keyBind.comparator))
+    
+    for k in notebinds:
+        noteList[k.note] = k.keys
+    for k in controlbinds:
+        controlList[k.note] = k.keys
 
 def printMidiDevices() -> None:
     i = 0
@@ -189,26 +241,30 @@ def checkForInterupt(inp) -> bool:
     return False
     
 def loadKeyBinds(fileDirectory: str = "./KeyBinds.json") -> bool:
-    global keybinds
+    global notebinds
+    global controlbinds
 
     if not os.path.exists(fileDirectory): return False
 
     fileData: str
     file = io.open(fileDirectory, "r")
-    fileData = file.read()
+    fileData = file.read() + "\n[]"
     if fileData.__len__() != 0:
-        keybinds = json.loads(fileData, object_hook=JSONEncoder)
+        notebinds = json.loads(fileData.splitlines()[0], object_hook=JSONEncoder)
+        controlbinds = json.loads(fileData.splitlines()[1], object_hook=JSONEncoder)
         file.close()
         return True
     file.close()
     return False
 
 def saveKeyBinds(fileDirectory: str = "./KeyBinds.json") -> bool:
-    global keybinds
+    global notebinds
 
     fileData: str
     file = io.open(fileDirectory, "w")
-    fileData = KeyBindEncoder().encode(keybinds)
+    fileData = KeyBindEncoder().encode(notebinds)
+    fileData += "\n"
+    fileData += KeyBindEncoder().encode(controlbinds)
     file.write(fileData)
     file.close()
     return True
@@ -239,15 +295,17 @@ def selectMidiDevice(checkInterupt: bool = False):
 
 MidiObj: pygame.midi = pygame.midi.init()
 InputMode: bool = True
-keybinds: list[keyBind] = [keyBind('enter', 67),keyBind('f', 57), keyBind('g', 59), keyBind('h', 60), keyBind('j', 62), keyBind('left_arrow', 69), keyBind('up_arrow', 70), keyBind('down_arrow', 71), keyBind('right_arrow', 72)]
-keyList: list[str] = [''] * 128
+notebinds: list[keyBind] = []
+noteList: list[str] = [''] * 255
+controlbinds: list[keyBind] = []
+controlList: list[str] = [''] * 255
 DeviceID: int = -1
 Device: pygame.midi.Input = pygame.midi.Input(pygame.midi.get_default_input_id())
 
 loadKeyBinds()
 
 clearConsole()
-print("Welcome to Midi2Key for linux/mac! press ESC to enter text input mode.\n")
+print("Welcome to Midi2Key for linux/mac! press ESC to enter/exit text input mode.\n")
 
 updateKeyList()
 
@@ -270,17 +328,20 @@ while True:
     #handle midi input
     output = pygame.midi.Input.read(Device, 1)
     if keyboard.is_pressed('esc'):
-        print("Type help for a list of commands! type -1 to quit.\n")
+        print("Type help for a list of commands! type -1 to go back.\n")
         InputMode = False
 
     if output != [] and InputMode:
-        print(f"Note: {output[0][0][1].__str__().ljust(3)} | Vel: {output[0][0][2].__str__().ljust(3)} | Time: {output[0][1]}")
         for o in output:
-        
-            if keyList[o[0][1]] != '' and o[0][2] != 0:
-                keyboard.press(keyList[o[0][1]])
-            elif keyList[o[0][1]] != '':
-                keyboard.release(keyList[o[0][1]])
+            print(f"Data: {o[0][0].__str__().ljust(3)} | Note: {o[0][1].__str__().ljust(3)} | Vel: {o[0][2].__str__().ljust(3)} | Time: {o[1]}")
+    
+            if noteList[o[0][1]] != '' and o[0][2] != 0 and o[0][0] == 144:
+                keyboard.press(noteList[o[0][1]])
+            elif noteList[o[0][1]] != '' and o[0][0] == 128:
+                keyboard.release(noteList[o[0][1]])
+            elif controlList[o[0][1]] != '':
+                keyboard.press_and_release(controlList[o[0][1]])
+    
     elif not InputMode:
         main()
 
