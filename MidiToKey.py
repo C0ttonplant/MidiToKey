@@ -293,6 +293,64 @@ def selectMidiDevice(checkInterupt: bool = False):
             DeviceID = inp
             Device = pygame.midi.Input(DeviceID)
 
+def main() -> None:
+    loadKeyBinds()
+
+    clearConsole()
+    print("Welcome to Midi2Key for linux/mac! press ESC to enter/exit text input mode.\n")
+
+    updateKeyList()
+
+    #display = pygame.display.set_mode((300, 300))
+
+    if(pygame.midi.get_count() == 0):
+        print("No midi devices! Quitting...")
+        pygame.midi.quit()
+        pygame.quit()
+        sys.exit()
+
+    printMidiDevices()
+
+    selectMidiDevice()
+
+    print("Sucsess!\n")
+
+    while True:
+        global notebinds
+        global noteList
+        global controlbinds
+        global controlList
+        global DeviceID
+        global Device
+        
+        #handle midi input
+        output = pygame.midi.Input.read(Device, 1)
+        if keyboard.is_pressed('esc'):
+            print("Type help for a list of commands! type -1 to go back.\n")
+            InputMode = False
+
+        if output != [] and InputMode:
+            for o in output:
+                print(f"Data: {o[0][0].__str__().ljust(3)} | Note: {o[0][1].__str__().ljust(3)} | Vel: {o[0][2].__str__().ljust(3)} | Time: {o[1]}")
+        
+                if noteList[o[0][1]] != '' and o[0][2] != 0 and o[0][0] == 144:
+                    keyboard.press(noteList[o[0][1]])
+                elif noteList[o[0][1]] != '' and o[0][0] == 128:
+                    keyboard.release(noteList[o[0][1]])
+                elif controlList[o[0][1]] != '':
+                    keyboard.press_and_release(controlList[o[0][1]])
+        
+        elif not InputMode:
+            checkForInput()
+
+        #get async console input
+
+        
+
+
+    pygame.midi.quit()
+
+
 MidiObj: pygame.midi = pygame.midi.init()
 InputMode: bool = True
 notebinds: list[keyBind] = []
@@ -302,52 +360,4 @@ controlList: list[str] = [''] * 255
 DeviceID: int = -1
 Device: pygame.midi.Input = pygame.midi.Input(pygame.midi.get_default_input_id())
 
-loadKeyBinds()
-
-clearConsole()
-print("Welcome to Midi2Key for linux/mac! press ESC to enter/exit text input mode.\n")
-
-updateKeyList()
-
-#display = pygame.display.set_mode((300, 300))
-
-if(pygame.midi.get_count() == 0):
-    print("No midi devices! Quitting...")
-    pygame.midi.quit()
-    pygame.quit()
-    sys.exit()
-
-printMidiDevices()
-
-selectMidiDevice()
-
-print("Sucsess!\n")
-
-while True:
-     
-    #handle midi input
-    output = pygame.midi.Input.read(Device, 1)
-    if keyboard.is_pressed('esc'):
-        print("Type help for a list of commands! type -1 to go back.\n")
-        InputMode = False
-
-    if output != [] and InputMode:
-        for o in output:
-            print(f"Data: {o[0][0].__str__().ljust(3)} | Note: {o[0][1].__str__().ljust(3)} | Vel: {o[0][2].__str__().ljust(3)} | Time: {o[1]}")
-    
-            if noteList[o[0][1]] != '' and o[0][2] != 0 and o[0][0] == 144:
-                keyboard.press(noteList[o[0][1]])
-            elif noteList[o[0][1]] != '' and o[0][0] == 128:
-                keyboard.release(noteList[o[0][1]])
-            elif controlList[o[0][1]] != '':
-                keyboard.press_and_release(controlList[o[0][1]])
-    
-    elif not InputMode:
-        checkForInput()
-
-    #get async console input
-
-    
-
-
-pygame.midi.quit()
+main()
