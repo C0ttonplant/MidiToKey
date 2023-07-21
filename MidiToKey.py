@@ -35,7 +35,7 @@ Export:      export the current keyBinds
 Import:      import keyBinds from a file
 List -[arg]: [devices]: lists the midi devices
              [keybinds]: lists the keybinds''') 
-    elif inp == 'input': #TODO fix error input
+    elif inp == 'input':
         DeviceID = -1
         printMidiDevices()
 
@@ -141,7 +141,6 @@ List -[arg]: [devices]: lists the midi devices
             for k in controlbinds:
                 print(k)
         else: print("Invalid operator.")
-
 
 class KeyBindEncoder(json.encoder.JSONEncoder):
     def default(self, o):
@@ -279,11 +278,14 @@ def selectMidiDevice(checkInterupt: bool = False):
     global DeviceID
     global Device
 
+    pygame.midi.quit()
+    pygame.midi.init()
+
     end = False
     while not end:
         inp = input("\nType the device number you want to use: ")
         if checkInterupt:
-            if checkForInterupt(inp + (not checkInterupt)): break
+            if checkForInterupt(tryParseInt(inp) + int(not checkInterupt)): break
         
         inp = tryParseInt(inp)
         if not (inp < pygame.midi.get_count() and inp >= 0 and inp % 2 == 1):
@@ -294,6 +296,15 @@ def selectMidiDevice(checkInterupt: bool = False):
             Device = pygame.midi.Input(DeviceID)
 
 def main() -> None:
+    global notebinds
+    global noteList
+    global controlbinds
+    global controlList
+    global DeviceID
+    global Device
+    global display
+    global InputMode
+    
     loadKeyBinds()
 
     clearConsole()
@@ -301,7 +312,7 @@ def main() -> None:
 
     updateKeyList()
 
-    #display = pygame.display.set_mode((300, 300))
+    display = pygame.display.set_mode((300, 300))
 
     if(pygame.midi.get_count() == 0):
         print("No midi devices! Quitting...")
@@ -316,14 +327,10 @@ def main() -> None:
     print("Sucsess!\n")
 
     while True:
-        global notebinds
-        global noteList
-        global controlbinds
-        global controlList
-        global DeviceID
-        global Device
         
+
         #handle midi input
+        
         output = pygame.midi.Input.read(Device, 1)
         if keyboard.is_pressed('esc'):
             print("Type help for a list of commands! type -1 to go back.\n")
@@ -359,5 +366,6 @@ controlbinds: list[keyBind] = []
 controlList: list[str] = [''] * 255
 DeviceID: int = -1
 Device: pygame.midi.Input = pygame.midi.Input(pygame.midi.get_default_input_id())
+display: pygame.surface
 
 main()
