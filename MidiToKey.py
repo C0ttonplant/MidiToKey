@@ -13,7 +13,7 @@ import keyboard
 import json
 import io
 
-def main():
+def checkForInput():
     global Device
     global DeviceID
     global InputMode
@@ -343,7 +343,7 @@ while True:
                 keyboard.press_and_release(controlList[o[0][1]])
     
     elif not InputMode:
-        main()
+        checkForInput()
 
     #get async console input
 
