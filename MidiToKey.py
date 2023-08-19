@@ -234,7 +234,7 @@ def checkForInterupt(inp) -> bool:
     if keyboard.is_pressed('esc'):
         InputMode = True
         return True
-    if inp == "exit":
+    if inp.lower() == "q":
         InputMode = True
         return True
     return False
@@ -308,7 +308,7 @@ def main() -> None:
     loadKeyBinds()
 
     clearConsole()
-    print("Welcome to Midi2Key for linux/mac! press ESC to enter/exit text input mode.\n")
+    print(f"Welcome to Midi2Key for linux/mac! press {EscapeKey.upper()} to enter/exit text input mode.\n")
 
     updateKeyList()
 
@@ -332,8 +332,8 @@ def main() -> None:
         #handle midi input
         
         output = pygame.midi.Input.read(Device, 1)
-        if keyboard.is_pressed('esc'):
-            print("Type help for a list of commands! type -1 to go back.\n")
+        if keyboard.is_pressed(EscapeKey):
+            print(f"Type help for a list of commands! type -1 to go back, {EscapeKey.upper()} to escape.\n")
             InputMode = False
 
         if output != [] and InputMode:
@@ -357,7 +357,7 @@ def main() -> None:
 
     pygame.midi.quit()
 
-
+EscapeKey = 'q'
 MidiObj: pygame.midi = pygame.midi.init()
 InputMode: bool = True
 notebinds: list[keyBind] = []
