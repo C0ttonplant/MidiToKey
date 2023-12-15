@@ -1,11 +1,11 @@
 #!/bin/bash
 
-test -d /usr/local/share/alsa
+test -f /usr/local/share/alsa/alsa.conf
 
-if ($? == 1)
-{
+if [ $? = 1 ]
+then
     sudo mkdir /usr/local/share/alsa/
-    sudo ln -s /usr/local/share/alsa/alsa.conf /usr/share/alsa/alsa.conf
-}
+    sudo ln -s /usr/share/alsa/alsa.conf  /usr/local/share/alsa/alsa.conf
+fi
 
 /bin/python3 ./MidiToKey.py
