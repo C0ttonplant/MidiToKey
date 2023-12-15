@@ -6,8 +6,11 @@ from functools import cmp_to_key
 import pygame
 import pygame.midi
 import pyautogui as keyboard
+import pynput
 import json
 import io
+
+class MyException(Exception): pass
 
 def checkForInput():
     global Device
@@ -284,12 +287,21 @@ def selectMidiDevice(checkInterupt: bool = False):
             if checkForInterupt(tryParseInt(inp) + int(not checkInterupt)): break
         
         inp = tryParseInt(inp)
+
+        device_is_valid = pygame.midi.get_device_info(inp)[2] == 1
+
+
         if not (inp < pygame.midi.get_count() and inp >= 0 and inp % 2 == 1):
             print("Invalid number.")
         else:
             end = True
             DeviceID = inp
             Device = pygame.midi.Input(DeviceID)
+
+def on_press(key):
+    if key == pynput.keyboard.Key.esc:
+        print("Type help for a list of commands! type -1 to go back.\n")
+        InputMode = False
 
 def main() -> None:
     global notebinds
@@ -327,9 +339,6 @@ def main() -> None:
         #handle midi input
         
         output = pygame.midi.Input.read(Device, 1)
-        if keyboard.is_pressed('esc'):
-            print("Type help for a list of commands! type -1 to go back.\n")
-            InputMode = False
 
         if output != [] and InputMode:
             for o in output:
