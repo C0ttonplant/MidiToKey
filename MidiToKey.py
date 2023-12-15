@@ -288,10 +288,12 @@ def selectMidiDevice(checkInterupt: bool = False):
         
         inp = tryParseInt(inp)
 
-        device_is_valid = pygame.midi.get_device_info(inp)[2] == 1
+        device_is_valid: bool = inp >= 0 and inp <= pygame.midi.get_count()
+        if device_is_valid:
+            device_is_valid = pygame.midi.get_device_info(inp)[2] == 1
 
 
-        if not (inp < pygame.midi.get_count() and inp >= 0 and inp % 2 == 1):
+        if not device_is_valid:
             print("Invalid number.")
         else:
             end = True
