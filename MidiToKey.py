@@ -2,14 +2,10 @@
 import os
 import sys
 import platform
-
-if os.geteuid() != 0 and platform.system() == 'Linux':
-    os.execvp('sudo', ['sudo', 'python3'] + sys.argv)
-
 from functools import cmp_to_key
 import pygame
 import pygame.midi
-import keyboard
+import pyautogui as keyboard
 import json
 import io
 
@@ -328,7 +324,6 @@ def main() -> None:
 
     while True:
         
-
         #handle midi input
         
         output = pygame.midi.Input.read(Device, 1)
@@ -341,11 +336,11 @@ def main() -> None:
                 print(f"Data: {o[0][0].__str__().ljust(3)} | Note: {o[0][1].__str__().ljust(3)} | Vel: {o[0][2].__str__().ljust(3)} | Time: {o[1]}")
         
                 if noteList[o[0][1]] != '' and o[0][2] != 0 and o[0][0] == 144:
-                    keyboard.press(noteList[o[0][1]])
+                    keyboard.keyDown(noteList[o[0][1]])
                 elif noteList[o[0][1]] != '' and o[0][0] == 128:
-                    keyboard.release(noteList[o[0][1]])
+                    keyboard.keyUp(noteList[o[0][1]])
                 elif controlList[o[0][1]] != '':
-                    keyboard.press_and_release(controlList[o[0][1]])
+                    keyboard.press(controlList[o[0][1]])
         
         elif not InputMode:
             checkForInput()
