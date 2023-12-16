@@ -18,126 +18,127 @@ def checkForInput():
     global DeviceID
     global InputMode
     global MidiObj
-    
-    inp = input(">")
-    inp = inp.__str__().lower()
+    while not InputMode:
+        inp = input(">")
+        inp = inp.__str__().lower()
 
-    if inp == 'help':
-        print('''Here is a list of commands:
+        if inp == 'help':
+            print('''Here is a list of commands:
 
-Exit:        go back to midi input
-Clear:       clear the console
-Input:       change the midi input
-KeyBinds -[arg]: [note] add or remove note keyBinds
-                 [control] add or remove controller keybinds
-Export:      export the current keyBinds
-Import:      import keyBinds from a file
-List -[arg]: [devices]: lists the midi devices
-             [keybinds]: lists the keybinds''') 
-    elif inp == 'input':
-        DeviceID = -1
-        printMidiDevices()
+    Exit:        go back to midi input
+    Clear:       clear the console
+    Input:       change the midi input
+    KeyBinds -[arg]: [note] add or remove note keyBinds
+                    [control] add or remove controller keybinds
+    Export:      export the current keyBinds
+    Import:      import keyBinds from a file
+    List -[arg]: [devices]: lists the midi devices
+                [keybinds]: lists the keybinds''') 
+        elif inp == 'input':
+            DeviceID = -1
+            printMidiDevices()
 
-        selectMidiDevice(True)
-    elif inp.split(" ")[0] == 'keybinds':
-        if inp.split(" ")[1] == '-control':
-            k = input("Add controller keybinds by typing a tuple in the form: Note, key.\nLeaving the key blank removes the keybind\n>>").strip().lower()
+            selectMidiDevice(True)
+        elif inp.split(" ")[0] == 'keybinds':
+            if inp.split(" ")[1] == '-control':
+                k = input("Add controller keybinds by typing a tuple in the form: Note, key.\nLeaving the key blank removes the keybind\n>>").strip().lower()
+                while True:
+
+                    if k == "-1": break
+
+                    if not k.__contains__(","):
+                        k = "-1,-1"
+
+                    n = k.split(",")[0].strip()
+                    b = k.split(",")[1].strip() 
+
+                    #print(f"[\"{n}\", \"{b}\"]")
+
+                    if n == "-1" and b == "-1" or n == "":
+                        k = input("Invalid input. Try again!\n>>")
+                    elif int(n) < 0 and int(n) > 256:
+                        k = input("Data out of range (0 - 255)\n>>")
+                    elif isValidKey(k):
+                        k = input("Invalid key. Valid key ex: ctrl+s\n>>")
+                    else:
+                        if controlList[tryParseInt(n)] != '':
+                            i = 0
+                            for bind in controlbinds:
+                                if bind.note == tryParseInt(n):
+                                    controlbinds.pop(i)
+                                    break
+                                i += 1
+                        if b != '':
+                            controlbinds.append(keyBind(b, int(n)))
+
+                        updateKeyList()
+                        k = input("Success!\n>>")
+            else:
+                k = input("Add note keybinds by typing a tuple in the form: Note, key.\nLeaving the key blank removes the keybind\n>>").strip().lower()
+                while True:
+
+                    if k == "-1": break
+
+                    if not k.__contains__(","):
+                        k = "-1,-1"
+
+                    n = k.split(",")[0].strip()
+                    b = k.split(",")[1].strip() 
+
+                    #print(f"[\"{n}\", \"{b}\"]")
+
+                    if n == "-1" and b == "-1" or n == "":
+                        k = input("Invalid input. Try again!\n>>")
+                    elif int(n) < 0 and int(n) > 256:
+                        k = input("Note out of range (0 - 255)\n>>")
+                    elif isValidKey(k):
+                        k = input("Invalid key. Valid key ex: ctrl+s\n>>")
+                    else:
+                        if noteList[tryParseInt(n)] != '':
+                            i = 0
+                            for bind in notebinds:
+                                if bind.note == tryParseInt(n):
+                                    notebinds.pop(i)
+                                    break
+                                i += 1
+                        if b != '':
+                            notebinds.append(keyBind(b, int(n)))
+
+                        updateKeyList()
+                        k = input("Success!\n>>")
+        elif inp == 'clear':
+            clearConsole()
+        elif inp == 'export':
+            k = input("Type the desired directory for the file. press enter for the default\n>>")
+            
+            if k == "": saveKeyBinds()
+            else: saveKeyBinds(k)        
+            print("Keybinds successfully saved!")
+        elif inp == 'import':
             while True:
+                dir = input("Type the directory of the file. press enter for the default\n>>")
 
 
-                if not k.__contains__(","):
-                    k = "-1,-1"
-
-                n = k.split(",")[0].strip()
-                b = k.split(",")[1].strip() 
-
-                #print(f"[\"{n}\", \"{b}\"]")
-
-                if n == "-1" and b == "-1" or n == "":
-                    k = input("Invalid input. Try again!\n>>")
-                elif int(n) < 0 and int(n) > 256:
-                    k = input("Data out of range (0 - 255)\n>>")
-                elif isValidKey(k):
-                    k = input("Invalid key. Valid key ex: ctrl+s\n>>")
-                else:
-                    if controlList[tryParseInt(n)] != '':
-                        i = 0
-                        for bind in controlbinds:
-                            if bind.note == tryParseInt(n):
-                                controlbinds.pop(i)
-                                break
-                            i += 1
-                    if b != '':
-                        controlbinds.append(keyBind(b, int(n)))
-
-                    updateKeyList()
-                    k = input("Success!\n>>")
-        else:
-            k = input("Add note keybinds by typing a tuple in the form: Note, key.\nLeaving the key blank removes the keybind\n>>").strip().lower()
-            while True:
-                if checkForInterupt(k): break
-
-
-                if not k.__contains__(","):
-                    k = "-1,-1"
-
-                n = k.split(",")[0].strip()
-                b = k.split(",")[1].strip() 
-
-                #print(f"[\"{n}\", \"{b}\"]")
-
-                if n == "-1" and b == "-1" or n == "":
-                    k = input("Invalid input. Try again!\n>>")
-                elif int(n) < 0 and int(n) > 256:
-                    k = input("Note out of range (0 - 255)\n>>")
-                elif isValidKey(k):
-                    k = input("Invalid key. Valid key ex: ctrl+s\n>>")
-                else:
-                    if noteList[tryParseInt(n)] != '':
-                        i = 0
-                        for bind in notebinds:
-                            if bind.note == tryParseInt(n):
-                                notebinds.pop(i)
-                                break
-                            i += 1
-                    if b != '':
-                        notebinds.append(keyBind(b, int(n)))
-
-                    updateKeyList()
-                    k = input("Success!\n>>")
-    elif inp == 'clear':
-        clearConsole()
-    elif inp == 'export':
-        k = input("Type the desired directory for the file. press enter for the default\n>>")
-        
-        if k == "": saveKeyBinds()
-        else: saveKeyBinds(k)        
-        print("Keybinds successfully saved!")
-    elif inp == 'import':
-        while True:
-            dir = input("Type the directory of the file. press enter for the default\n>>")
-
-
-            if dir == "": 
-                if loadKeyBinds():
+                if dir == "": 
+                    if loadKeyBinds():
+                        print("Keybinds loaded successfully!")
+                        break
+                    print("Default file does not exist. Did you save the file as something else?")
+                elif loadKeyBinds(dir):
                     print("Keybinds loaded successfully!")
                     break
-                print("Default file does not exist. Did you save the file as something else?")
-            elif loadKeyBinds(dir):
-                print("Keybinds loaded successfully!")
-                break
-            else: print("The file you specified does not exist.")
-    elif inp.split(" ")[0] == 'list':
-        if inp.split(" ")[1] == "-devices":
-            printMidiDevices()
-        elif inp.split(" ")[1] == "-keybinds":
-            print("Note:")
-            for k in notebinds:
-                print(k)
-            print("Controller:")
-            for k in controlbinds:
-                print(k)
-        else: print("Invalid operator.")
+                else: print("The file you specified does not exist.")
+        elif inp.split(" ")[0] == 'list':
+            if inp.split(" ")[1] == "-devices":
+                printMidiDevices()
+            elif inp.split(" ")[1] == "-keybinds":
+                print("Note:")
+                for k in notebinds:
+                    print(k)
+                print("Controller:")
+                for k in controlbinds:
+                    print(k)
+            else: print("Invalid operator.")
 
 class KeyBindEncoder(json.encoder.JSONEncoder):
     def default(self, o):
@@ -207,13 +208,13 @@ def printMidiDevices() -> None:
         i += 1 
 
 def isValidKey(key: str) -> bool:
-    if keyboard.is_modifier(key): return True
+    #replce is_modifire
     if key.__len__() == 1: return True
     if key.__contains__('+'):
         s = key.split('+')
         isValid = True
         for k in s:
-            isValid = keyboard.is_modifier(k) or k.__len__() == 1
+            #replace is_modifire
             if not isValid: return False
         return True
     return False
@@ -320,7 +321,7 @@ def main() -> None:
     clearConsole()
     print("Welcome to Midi2Key for linux/mac! press ESC to enter/exit text input mode.\n")
 
-
+    th1 = 0
     th = threading.Thread(target=thread_listener, args=[])
     th.start()
 
@@ -358,8 +359,16 @@ def main() -> None:
                 elif controlList[o[0][1]] != '':
                     keyboard.press(controlList[o[0][1]])
         
+        elif InputMode and th1 != 0:
+            print("thread closed")
+            th1.join()
+            th1 = 0
+        elif not InputMode and th1 == 0:
+            print("thread created")
+            th1 = threading.Thread(target=checkForInput(), args=[])
+            th1.start()
         elif not InputMode:
-            checkForInput()
+            pygame.midi.Input.read(Device, 1)
 
         #get async console input
 
