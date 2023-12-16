@@ -9,6 +9,7 @@ import pyautogui as keyboard
 import pynput
 import json
 import io
+import threading
 
 class MyException(Exception): pass
 
@@ -19,7 +20,6 @@ def checkForInput():
     global MidiObj
     
     inp = input(">")
-    if checkForInterupt(inp): return
     inp = inp.__str__().lower()
 
     if inp == 'help':
@@ -43,7 +43,6 @@ List -[arg]: [devices]: lists the midi devices
         if inp.split(" ")[1] == '-control':
             k = input("Add controller keybinds by typing a tuple in the form: Note, key.\nLeaving the key blank removes the keybind\n>>").strip().lower()
             while True:
-                if checkForInterupt(k): break
 
 
                 if not k.__contains__(","):
@@ -118,7 +117,6 @@ List -[arg]: [devices]: lists the midi devices
         while True:
             dir = input("Type the directory of the file. press enter for the default\n>>")
 
-            if checkForInterupt(dir): break
 
             if dir == "": 
                 if loadKeyBinds():
@@ -226,18 +224,6 @@ def clearConsole() -> None:
     else:
         os.system('cls')
 
-def checkForInterupt(inp) -> bool:
-    global InputMode
-
-    if inp == "-1": return True
-    if keyboard.is_pressed('esc'):
-        InputMode = True
-        return True
-    if inp == "exit":
-        InputMode = True
-        return True
-    return False
-    
 def loadKeyBinds(fileDirectory: str = "./KeyBinds.json") -> bool:
     global notebinds
     global controlbinds
@@ -277,6 +263,7 @@ def selectMidiDevice(checkInterupt: bool = False):
     global DeviceID
     global Device
 
+
     pygame.midi.quit()
     pygame.midi.init()
 
@@ -301,9 +288,22 @@ def selectMidiDevice(checkInterupt: bool = False):
             Device = pygame.midi.Input(DeviceID)
 
 def on_press(key):
+    global InputMode
     if key == pynput.keyboard.Key.esc:
         print("Type help for a list of commands! type -1 to go back.\n")
-        InputMode = False
+        InputMode = not InputMode
+
+def thread_listener():
+    print("im a seperate thread")
+    # Collect events until released
+    with pynput.keyboard.Listener(
+            on_press=on_press) as listener:
+        try:
+            listener.join()
+        except MyException as e:
+            print('{0} was pressed'.format(e.args[0]))
+
+
 
 def main() -> None:
     global notebinds
@@ -314,20 +314,25 @@ def main() -> None:
     global Device
     global display
     global InputMode
-    
+
     loadKeyBinds()
 
     clearConsole()
     print("Welcome to Midi2Key for linux/mac! press ESC to enter/exit text input mode.\n")
 
+
+    th = threading.Thread(target=thread_listener, args=[])
+    th.start()
+
     updateKeyList()
 
-    display = pygame.display.set_mode((300, 300))
+    #display = pygame.display.set_mode((300, 300))
 
     if(pygame.midi.get_count() == 0):
         print("No midi devices! Quitting...")
         pygame.midi.quit()
         pygame.quit()
+        th.join()
         sys.exit()
 
     printMidiDevices()
